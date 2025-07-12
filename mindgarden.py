@@ -1,45 +1,50 @@
 import pygame
+import os
 import time
 import random
 
-# Initialize pygame
+# Initialize Pygame and mixer
 pygame.init()
 pygame.mixer.init()
 
-# Setup screen
 screen = pygame.display.set_mode((600, 400))
 pygame.display.set_caption("🌱 MindGarden: Relax to Grow")
 clock = pygame.time.Clock()
-font = pygame.font.SysFont(None, 24)
+font = pygame.font.SysFont(None, 28)
 
-# Load background music (MP3)
-try:
-    pygame.mixer.music.load("calm.mp3")
-    pygame.mixer.music.set_volume(0.3)
-    pygame.mixer.music.play(-1)
-except Exception as e:
-    print("Error loading calm.mp3:", e)
-
-# Load water sound effect (WAV)
-try:
-    water_sound = pygame.mixer.Sound("water.wav")
-    water_sound.set_volume(0.6)
-except:
-    print("Water sound not found.")
-    water_sound = None
-
-# Load tree images
+# Load static tree images
 try:
     tree_small = pygame.image.load("tree_small.png").convert_alpha()
     tree_medium = pygame.image.load("tree_medium.png").convert_alpha()
     tree_large = pygame.image.load("tree_large.png").convert_alpha()
 except Exception as e:
-    print("Error loading tree images:", e)
-    exit()
+    print("Static tree images missing:", e)
+    tree_small = tree_medium = tree_large = None
 
-# Game state
-tree_height = 100  # Logical height
-blink_times = []
+# Load animated frames: frames 34-99 then 1-33 for looping
+FRAME_FOLDER = "frames"
+animated_frames = []
+for i in list(range(34, 100)) + list(range(1, 34)):
+    try:
+        path = os.path.join(FRAME_FOLDER, f"frame_{i:03}.png")
+        animated_frames.append(pygame.image.load(path).convert_alpha())
+    except Exception as e:
+        print(f"Missing frame {i}: {e}")
+
+# Load background music (optional)
+try:
+    pygame.mixer.music.load("calm.mp3")
+    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.play(-1)
+except Exception:
+    pass
+
+# Load water sound
+try:
+    water_sound = pygame.mixer.Sound("water.wav")
+    water_sound.set_volume(0.6)
+except:
+    water_sound = None
 
 # Sky color stages
 sky_colors = [
@@ -53,19 +58,14 @@ def get_sky_color(height):
     stage = min(int((height - 50) / 70), len(sky_colors) - 1)
     return sky_colors[stage]
 
-def draw_instructions():
-    lines = [
-        "[C] Calm → Grow slowly 🌱",
-        "[B] Blink → Water tree 💧",
-        "Too many [B] → Stress → Shrink 🌿",
-        "[ESC] Quit"
-    ]
+def draw_instructions(lines):
     for i, text in enumerate(lines):
         render = font.render(text, True, (255, 255, 255))
         screen.blit(render, (10, 10 + i * 24))
 
-def draw_tree(height):
-    # Select appropriate image
+def draw_tree_static(height):
+    if not tree_small or not tree_medium or not tree_large:
+        return
     if height <= 120:
         img = tree_small
     elif height <= 220:
@@ -73,9 +73,8 @@ def draw_tree(height):
     else:
         img = tree_large
 
-    # 🌱 Tiny starting scale: 0.02 → max 0.8
-    scale_factor = (height - 50) / 250  # range 0–1
-    scale_factor = max(0.02, min(0.8, scale_factor))  # clamp
+    scale_factor = (height - 50) / 250
+    scale_factor = max(0.02, min(0.8, scale_factor))
 
     width = int(img.get_width() * scale_factor)
     height_scaled = int(img.get_height() * scale_factor)
@@ -85,7 +84,12 @@ def draw_tree(height):
     y = 400 - height_scaled
     screen.blit(img_scaled, (x, y))
 
-
+def draw_animated_frame(frame_index):
+    if not animated_frames:
+        return
+    frame = animated_frames[frame_index]
+    rect = frame.get_rect(center=(300, 300))
+    screen.blit(frame, rect)
 
 # Leaves animation
 class Leaf:
@@ -105,7 +109,7 @@ class Leaf:
     def draw(self):
         pygame.draw.ellipse(screen, (34, 139, 34), (self.x, self.y, self.size, self.size // 2))
 
-# Water drops
+# Water drops animation
 class WaterDrop:
     def __init__(self, x, y):
         self.x = x + random.randint(-10, 10)
@@ -125,21 +129,132 @@ class WaterDrop:
     def draw(self):
         screen.blit(self.surface, (self.x, self.y))
 
-# Animation lists
 leaves = [Leaf() for _ in range(20)]
 water_drops = []
 
-# Game loop
-running = True
-while running:
-    screen.fill(get_sky_color(tree_height))
-    draw_instructions()
-    draw_tree(tree_height)
+def show_start_menu():
+    selecting = True
+    while selecting:
+        screen.fill((30, 100, 160))
+        lines = [
+            "Welcome to 🌿 MindGarden",
+            "Choose tree mode:",
+            "[1] Static Tree 🌳",
+            "[2] Animated Tree 🎞️",
+            "[3] Animated Tree + Health Bar 💖",
+            "[ESC] Quit"
+        ]
+        for i, line in enumerate(lines):
+            txt = font.render(line, True, (255, 255, 255))
+            screen.blit(txt, (50, 60 + i * 40))
+        pygame.display.flip()
 
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    return "static"
+                elif event.key == pygame.K_2:
+                    return "animated"
+                elif event.key == pygame.K_3:
+                    return "health"
+                elif event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    exit()
+
+def reset_game_state():
+    global blink_times, tree_height, health, frame_index, water_drops, message_show_time
+    blink_times = []
+    tree_height = 100
+    health = 50
+    frame_index = 0
+    water_drops.clear()
+    message_show_time = 0
+
+mode = show_start_menu()
+reset_game_state()
+
+running = True
+message_show_time = 0
+
+while running:
+    if mode == "static":
+        screen.fill(get_sky_color(tree_height))
+        draw_instructions([
+            "[C] Calm → Grow slowly 🌱",
+            "[B] Blink → Water tree 💧",
+            "Too many [B] → Stress → Shrink 🌿",
+            "[R] Reset",
+            "[1,2,3] Change Mode",
+            "[ESC] Quit"
+        ])
+        draw_tree_static(tree_height)
+
+        # Show relax message if fully grown
+        if tree_height >= 300:
+            if message_show_time == 0:
+                message_show_time = time.time()
+            elif time.time() - message_show_time < 3:
+                txt = font.render("🌟 You are relaxed now! 🌟", True, (255, 255, 0))
+                screen.blit(txt, (170, 50))
+        else:
+            message_show_time = 0
+
+    elif mode == "animated":
+        screen.fill((40, 120, 180))
+        draw_instructions([
+            "[C] Calm → Tree grows",
+            "[B] Blink → Tree grows/shrinks",
+            "[R] Reset",
+            "[1,2,3] Change Mode",
+            "[ESC] Quit"
+        ])
+        draw_animated_frame(frame_index)
+
+        # Relax message
+        if frame_index == len(animated_frames) - 1:
+            if message_show_time == 0:
+                message_show_time = time.time()
+            elif time.time() - message_show_time < 3:
+                txt = font.render("🌟 You are relaxed now! 🌟", True, (255, 255, 0))
+                screen.blit(txt, (170, 50))
+        else:
+            message_show_time = 0
+
+    elif mode == "health":
+        screen.fill((30, 110, 150))
+        draw_instructions([
+            "[C] Calm → Health +",
+            "[B] Blink → Health grows/shrinks",
+            "[R] Reset",
+            "[1,2,3] Change Mode",
+            "[ESC] Quit"
+        ])
+        draw_animated_frame(frame_index)
+        # Draw health bar background
+        pygame.draw.rect(screen, (180, 180, 180), (200, 360, 200, 20))
+        # Draw current health
+        pygame.draw.rect(screen, (0, 255, 0), (200, 360, 2 * health, 20))
+        txt = font.render(f"Health: {health}/100", True, (255, 255, 255))
+        screen.blit(txt, (240, 330))
+
+        if health >= 100:
+            if message_show_time == 0:
+                message_show_time = time.time()
+            elif time.time() - message_show_time < 3:
+                txt = font.render("🌟 You are relaxed now! 🌟", True, (255, 255, 0))
+                screen.blit(txt, (170, 50))
+        else:
+            message_show_time = 0
+
+    # Leaves animation
     for leaf in leaves:
         leaf.update()
         leaf.draw()
 
+    # Water drops animation
     for drop in water_drops[:]:
         drop.update()
         drop.draw()
@@ -153,26 +268,80 @@ while running:
     keys = pygame.key.get_pressed()
     current_time = time.time()
 
-    # Remove old blinks (>3 sec ago)
+    # Remove old blink times (>3 sec ago)
     blink_times = [t for t in blink_times if current_time - t < 3]
-
-    if keys[pygame.K_c]:
-        tree_height += 0.4  # Calm growth
-
-    if keys[pygame.K_b]:
-        blink_times.append(current_time)
-        if len(blink_times) > 4:
-            tree_height -= 2.5  # Shrink due to stress
-        else:
-            tree_height += 3.5  # Watering boost
-            if water_sound:
-                water_sound.play()
-            water_drops.append(WaterDrop(300, 400 - int(tree_height) - 20))
-
-    tree_height = max(50, min(300, tree_height))  # Clamp range
 
     if keys[pygame.K_ESCAPE]:
         running = False
+
+    if keys[pygame.K_r]:
+        reset_game_state()
+
+    # Mode switching in-game
+    if keys[pygame.K_1]:
+        mode = "static"
+        reset_game_state()
+    elif keys[pygame.K_2]:
+        mode = "animated"
+        reset_game_state()
+    elif keys[pygame.K_3]:
+        mode = "health"
+        reset_game_state()
+
+    # Game logic for each mode
+
+    # Calm always grows
+    if keys[pygame.K_c]:
+        if mode == "static":
+            tree_height += 0.4
+        elif mode == "animated":
+            if frame_index < len(animated_frames) - 1:
+                frame_index += 1
+        elif mode == "health":
+            if health < 100:
+                health += 1
+            if frame_index < len(animated_frames) - 1:
+                frame_index += 1
+
+    # Blink grows or shrinks based on blink frequency, same logic for all modes
+    if keys[pygame.K_b]:
+        blink_times.append(current_time)
+        if len(blink_times) > 4:
+            # Too many blinks → shrink/stress
+            if mode == "static":
+                tree_height -= 2.5
+            elif mode == "animated":
+                frame_index = max(0, frame_index - 2)
+            elif mode == "health":
+                health = max(0, health - 3)
+                frame_index = max(0, frame_index - 2)
+        else:
+            # Moderate blinks → grow/water
+            if mode == "static":
+                tree_height += 3.5
+                if water_sound:
+                    water_sound.play()
+                water_drops.append(WaterDrop(300, 400 - int(tree_height) - 20))
+            elif mode == "animated":
+                frame_index = min(len(animated_frames) - 1, frame_index + 2)
+                if water_sound:
+                    water_sound.play()
+                water_drops.append(WaterDrop(300, 400 - frame_index - 20))
+            elif mode == "health":
+                health = min(100, health + 1)
+                frame_index = min(len(animated_frames) - 1, frame_index + 1)
+                if water_sound:
+                    water_sound.play()
+                water_drops.append(WaterDrop(300, 400 - frame_index - 20))
+
+    # Clamp values to valid ranges
+    if mode == "static":
+        tree_height = max(50, min(300, tree_height))
+    elif mode == "animated":
+        frame_index = max(0, min(len(animated_frames) - 1, frame_index))
+    elif mode == "health":
+        health = max(0, min(100, health))
+        frame_index = max(0, min(len(animated_frames) - 1, frame_index))
 
     pygame.display.flip()
     clock.tick(30)
