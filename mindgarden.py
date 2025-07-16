@@ -66,23 +66,83 @@ def draw_instructions(lines):
 def draw_tree_static(height):
     if not tree_small or not tree_medium or not tree_large:
         return
-    if height <= 120:
+
+    if height <= 150:
+        # Small tree only
         img = tree_small
-    elif height <= 220:
-        img = tree_medium
+        scale = 0.6 + (height - 50) / 100 * 0.4  # 0.6 to 1.0
+        width = int(img.get_width() * scale)
+        height_scaled = int(img.get_height() * scale)
+        img_scaled = pygame.transform.smoothscale(img, (width, height_scaled))
+        x = (600 - width) // 2
+        y = 400 - height_scaled
+        screen.blit(img_scaled, (x, y))
+
+    elif 150 < height <= 210:
+        # Blend small → medium
+        t = (height - 150) / 60  # 0 to 1
+        img1 = tree_small
+        img2 = tree_medium
+
+        scale1 = 1.0 - t * 0.1       # 1.0 to 0.9
+        scale2 = 0.9 + t * 0.1       # 0.9 to 1.0
+
+        width1 = int(img1.get_width() * scale1)
+        height1 = int(img1.get_height() * scale1)
+        img1_scaled = pygame.transform.smoothscale(img1, (width1, height1))
+        img1_scaled.set_alpha(int(255 * (1 - t)))
+
+        width2 = int(img2.get_width() * scale2)
+        height2 = int(img2.get_height() * scale2)
+        img2_scaled = pygame.transform.smoothscale(img2, (width2, height2))
+        img2_scaled.set_alpha(int(255 * t))
+
+        x1 = (600 - width1) // 2
+        y1 = 400 - height1
+        x2 = (600 - width2) // 2
+        y2 = 400 - height2
+
+        screen.blit(img1_scaled, (x1, y1))
+        screen.blit(img2_scaled, (x2, y2))
+
+    elif 210 < height <= 280:
+        # Blend medium → large
+        t = (height - 210) / 70  # 0 to 1
+        img1 = tree_medium
+        img2 = tree_large
+
+        scale1 = 1.0 - t * 0.1       # 1.0 to 0.9
+        scale2 = 0.9 + t * 0.1       # 0.9 to 1.0
+
+        width1 = int(img1.get_width() * scale1)
+        height1 = int(img1.get_height() * scale1)
+        img1_scaled = pygame.transform.smoothscale(img1, (width1, height1))
+        img1_scaled.set_alpha(int(255 * (1 - t)))
+
+        width2 = int(img2.get_width() * scale2)
+        height2 = int(img2.get_height() * scale2)
+        img2_scaled = pygame.transform.smoothscale(img2, (width2, height2))
+        img2_scaled.set_alpha(int(255 * t))
+
+        x1 = (600 - width1) // 2
+        y1 = 400 - height1
+        x2 = (600 - width2) // 2
+        y2 = 400 - height2
+
+        screen.blit(img1_scaled, (x1, y1))
+        screen.blit(img2_scaled, (x2, y2))
+
     else:
+        # Large tree only
         img = tree_large
+        scale = 1.0
+        width = int(img.get_width() * scale)
+        height_scaled = int(img.get_height() * scale)
+        img_scaled = pygame.transform.smoothscale(img, (width, height_scaled))
+        x = (600 - width) // 2
+        y = 400 - height_scaled
+        screen.blit(img_scaled, (x, y))
 
-    scale_factor = (height - 50) / 250
-    scale_factor = max(0.02, min(0.8, scale_factor))
-
-    width = int(img.get_width() * scale_factor)
-    height_scaled = int(img.get_height() * scale_factor)
-    img_scaled = pygame.transform.smoothscale(img, (width, height_scaled))
-
-    x = (600 - width) // 2
-    y = 400 - height_scaled
-    screen.blit(img_scaled, (x, y))
 
 def draw_animated_frame(frame_index):
     if not animated_frames:
