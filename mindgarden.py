@@ -46,12 +46,13 @@ try:
 except:
     water_sound = None
 
-# Sky color stages
+# Sky color stages - Enhanced with more vibrant colors
 sky_colors = [
-    (135, 206, 235),
-    (100, 149, 237),
-    (70, 130, 180),
-    (25, 25, 112)
+    (135, 206, 250),  # Light sky blue
+    (100, 149, 237),  # Cornflower blue
+    (70, 130, 180),   # Steel blue
+    (25, 25, 112),    # Midnight blue
+    (15, 15, 80)      # Deep night blue
 ]
 
 def get_sky_color(height):
@@ -208,7 +209,26 @@ class Leaf:
             self.x = random.randint(0, 1100)
 
     def draw(self):
-        pygame.draw.ellipse(screen, (34, 139, 34), (self.x, self.y, self.size, self.size // 2))
+        # Enhanced leaf rendering with better colors and shape variation
+        leaf_colors = [
+            (34, 139, 34),   # Forest green
+            (50, 205, 50),   # Lime green
+            (144, 238, 144), # Light green
+            (107, 142, 35),  # Olive drab
+            (85, 107, 47)    # Dark olive green
+        ]
+        color = leaf_colors[hash(str(self.x + self.y)) % len(leaf_colors)]
+        
+        # Draw leaf with slight rotation effect
+        leaf_points = [
+            (self.x, self.y),
+            (self.x + self.size, self.y + self.size // 3),
+            (self.x + self.size // 2, self.y + self.size),
+            (self.x - self.size // 3, self.y + self.size // 2)
+        ]
+        pygame.draw.polygon(screen, color, leaf_points)
+        # Add a subtle highlight
+        pygame.draw.polygon(screen, (min(255, color[0] + 30), min(255, color[1] + 30), min(255, color[2] + 30)), leaf_points, 1)
 
 # Water drops animation
 class WaterDrop:
@@ -238,55 +258,100 @@ def show_start_menu():
     device_connected = False  # Simulate device connection status
     
     while selecting:
-        # Gradient background
-        screen.fill((15, 25, 50))
+        # Enhanced gradient background with more depth
+        screen.fill((5, 15, 30))
         
-        # Draw gradient effect
+        # Draw multi-layer gradient effect for more depth
         for y in range(700):
             color_factor = y / 700
-            color = (
-                int(15 + color_factor * 25),
-                int(25 + color_factor * 75), 
-                int(50 + color_factor * 110)
-            )
+            # Create a more complex gradient with multiple color zones
+            if y < 200:
+                # Top section - darker to lighter blue
+                factor = y / 200
+                color = (
+                    int(5 + factor * 20),
+                    int(15 + factor * 40),
+                    int(30 + factor * 60)
+                )
+            elif y < 400:
+                # Middle section - rich blue transition
+                factor = (y - 200) / 200
+                color = (
+                    int(25 + factor * 15),
+                    int(55 + factor * 35),
+                    int(90 + factor * 50)
+                )
+            else:
+                # Bottom section - deeper blues
+                factor = (y - 400) / 300
+                color = (
+                    int(40 + factor * 10),
+                    int(90 + factor * 20),
+                    int(140 + factor * 20)
+                )
             pygame.draw.line(screen, color, (0, y), (1100, y))
+        
+        # Add subtle animated background elements
+        time_offset = time.time() * 0.5
+        for i in range(8):
+            x = (i * 150 + int(time_offset * 20) % 300) % 1100
+            y = 100 + i * 80
+            radius = 30 + int(10 * (0.5 + 0.5 * abs(((time_offset + i) % 4) - 2)))
+            # Create circle surface with alpha
+            circle_surface = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            alpha = 30 + int(20 * (0.5 + 0.5 * abs(((time_offset * 0.7 + i) % 4) - 2)))
+            pygame.draw.circle(circle_surface, (50, 100, 150, alpha), (radius, radius), radius, 1)
+            screen.blit(circle_surface, (x - radius, y - radius))
         
         # Title section with larger, styled text
         title_font = pygame.font.SysFont(None, 64)
         subtitle_font = pygame.font.SysFont(None, 32)
         
-        # Main title with shadow effect
-        shadow_text = title_font.render("* MindGarden *", True, (20, 20, 20))
-        main_text = title_font.render("* MindGarden *", True, (120, 255, 120))
+        # Main title with shadow effect - Enhanced colors
+        shadow_text = title_font.render("* MindGarden *", True, (0, 0, 0))
+        main_text = title_font.render("* MindGarden *", True, (100, 255, 100))
         screen.blit(shadow_text, (552, 82))
         screen.blit(main_text, (550, 80))
         
-        # Subtitle
-        subtitle = subtitle_font.render("Brain-Controlled Relaxation Experience", True, (180, 220, 180))
+        # Subtitle - Better color
+        subtitle = subtitle_font.render("Brain-Controlled Relaxation Experience", True, (150, 255, 150))
         subtitle_rect = subtitle.get_rect(center=(550, 130))
         screen.blit(subtitle, subtitle_rect)
         
-        # Decorative elements
-        pygame.draw.circle(screen, (80, 150, 80, 100), (200, 200), 40, 2)
-        pygame.draw.circle(screen, (80, 150, 80, 100), (900, 250), 30, 2)
-        pygame.draw.circle(screen, (80, 150, 80, 100), (150, 400), 25, 2)
+        # Decorative elements - Enhanced with pulsing effect
+        pulse = 0.5 + 0.5 * abs(((time.time() * 2) % 4) - 2)  # Pulsing from 0.5 to 1.0
+        pygame.draw.circle(screen, (int(100 * pulse), int(200 * pulse), int(100 * pulse)), (200, 200), int(40 + 10 * pulse), 3)
+        pygame.draw.circle(screen, (int(120 * pulse), int(220 * pulse), int(120 * pulse)), (900, 250), int(30 + 8 * pulse), 3)
+        pygame.draw.circle(screen, (int(80 * pulse), int(180 * pulse), int(80 * pulse)), (150, 400), int(25 + 6 * pulse), 3)
         
-        # Device status panel
+        # Add floating particles
+        particle_time = time.time() * 0.3
+        for i in range(15):
+            x = 50 + (i * 70 + int(particle_time * 30 + i * 20)) % 1000
+            y = 50 + int(30 * abs(((particle_time + i * 0.5) % 4) - 2)) + i * 40
+            size = 2 + int(3 * (0.5 + 0.5 * abs(((particle_time * 1.5 + i) % 4) - 2)))
+            # Create particle surface with alpha
+            particle_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
+            alpha = 80 + int(40 * (0.5 + 0.5 * abs(((particle_time * 0.8 + i) % 4) - 2)))
+            pygame.draw.circle(particle_surface, (150, 200, 255, alpha), (size, size), size)
+            screen.blit(particle_surface, (x - size, y - size))
+        
+        # Device status panel - Enhanced colors
         status_y = 180
         panel_rect = pygame.Rect(350, status_y - 10, 400, 80)
-        pygame.draw.rect(screen, (40, 60, 90, 180), panel_rect)
-        pygame.draw.rect(screen, (100, 150, 200), panel_rect, 2)
+        pygame.draw.rect(screen, (30, 50, 80, 200), panel_rect)
+        pygame.draw.rect(screen, (120, 180, 240), panel_rect, 2)
         
-        # Device status with icon
+        # Device status with icon - Improved colors
         if device_connected:
             status_icon = "[ON]"
             status_text = "EEG Device: Connected"
-            status_color = (100, 255, 100)
+            status_color = (50, 255, 50)   # Brighter green
             detail_text = "Ready for brain-computer interface"
         else:
             status_icon = "[OFF]"
             status_text = "EEG Device: Not Connected"
-            status_color = (255, 120, 120)
+            status_color = (255, 100, 100)  # Softer red
             detail_text = "Using keyboard simulation mode"
         
         status_full = f"{status_icon} {status_text}"
@@ -314,14 +379,14 @@ def show_start_menu():
         for i, (key, title, desc) in enumerate(modes):
             y_pos = mode_y + 60 + i * 80
             
-            # Mode box
+            # Mode box - Enhanced colors
             box_rect = pygame.Rect(200, y_pos - 25, 700, 60)
-            pygame.draw.rect(screen, (30, 50, 80, 150), box_rect)
-            pygame.draw.rect(screen, (120, 180, 220), box_rect, 2)
+            pygame.draw.rect(screen, (20, 40, 70, 180), box_rect)
+            pygame.draw.rect(screen, (100, 150, 255), box_rect, 2)
             
-            # Key indicator
+            # Key indicator - Better colors
             key_circle = pygame.Rect(220, y_pos - 15, 40, 40)
-            pygame.draw.circle(screen, (80, 120, 180), key_circle.center, 20)
+            pygame.draw.circle(screen, (60, 120, 200), key_circle.center, 20)
             key_text = subtitle_font.render(key, True, (255, 255, 255))
             key_rect = key_text.get_rect(center=key_circle.center)
             screen.blit(key_text, key_rect)
@@ -333,11 +398,11 @@ def show_start_menu():
             desc_render = pygame.font.SysFont(None, 20).render(desc, True, (180, 180, 180))
             screen.blit(desc_render, (280, y_pos + 10))
         
-        # Control panel
+        # Control panel - Enhanced colors
         control_y = 580
         control_panel = pygame.Rect(250, control_y - 20, 600, 100)
-        pygame.draw.rect(screen, (20, 30, 50, 200), control_panel)
-        pygame.draw.rect(screen, (80, 120, 160), control_panel, 2)
+        pygame.draw.rect(screen, (15, 25, 45, 220), control_panel)
+        pygame.draw.rect(screen, (100, 140, 200), control_panel, 2)
         
         controls = [
             f"[D] {'Disconnect' if device_connected else 'Connect'} EEG Device (Demo)",
@@ -346,9 +411,9 @@ def show_start_menu():
         
         for i, control in enumerate(controls):
             if "[D]" in control:
-                color = (255, 255, 100)  # Yellow for device control
+                color = (255, 255, 50)  # Brighter yellow for device control
             else:
-                color = (200, 200, 200)
+                color = (220, 220, 220)  # Brighter white for other controls
             
             control_render = font.render(control, True, color)
             control_rect = control_render.get_rect(center=(550, control_y + i * 25))
@@ -398,7 +463,37 @@ message_show_time = 0
 
 while running:
     if mode == "static":
-        screen.fill(get_sky_color(tree_height))
+        # Enhanced dynamic sky background
+        sky_color = get_sky_color(tree_height)
+        screen.fill(sky_color)
+        
+        # Add atmospheric layers for depth
+        for layer in range(3):
+            layer_alpha = 30 - layer * 8
+            layer_offset = layer * 15
+            overlay_color = (
+                max(0, sky_color[0] - layer_offset),
+                max(0, sky_color[1] - layer_offset),
+                min(255, sky_color[2] + layer_offset),
+                layer_alpha
+            )
+            # Create atmospheric bands
+            for band in range(0, 700, 50):
+                band_height = 25 + layer * 5
+                pygame.draw.rect(screen, overlay_color[:3], (0, band + layer * 10, 1100, band_height))
+        
+        # Add subtle cloud-like effects
+        cloud_time = time.time() * 0.2
+        for i in range(6):
+            x = (i * 200 + int(cloud_time * 40 + i * 30)) % 1200 - 100
+            y = 50 + i * 100 + int(20 * abs(((cloud_time + i * 0.3) % 4) - 2))
+            width = 80 + int(40 * (0.5 + 0.5 * abs(((cloud_time * 0.7 + i) % 4) - 2)))
+            height = 30 + int(15 * (0.5 + 0.5 * abs(((cloud_time * 1.1 + i) % 4) - 2)))
+            # Create cloud surface with alpha
+            cloud_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+            cloud_alpha = 20 + int(15 * (0.5 + 0.5 * abs(((cloud_time * 0.9 + i) % 4) - 2)))
+            pygame.draw.ellipse(cloud_surface, (255, 255, 255, cloud_alpha), (0, 0, width, height))
+            screen.blit(cloud_surface, (x, y))
         draw_instructions([
             "[C] Calm -> Grow tree slowly +",
             "[B] Blink -> Water tree ~",
@@ -417,13 +512,38 @@ while running:
             if message_show_time == 0:
                 message_show_time = time.time()
             elif time.time() - message_show_time < 7:
-                txt = font.render("*** Your tree is fully grown! You are relaxed now! ***", True, (255, 255, 0))
+                txt = font.render("*** Your tree is fully grown! You are relaxed now! ***", True, (255, 255, 50))
                 screen.blit(txt, (120, 50))
         else:
             message_show_time = 0
 
     elif mode == "animated":
-        screen.fill((40, 120, 180))
+        # Enhanced animated background with dynamic elements
+        base_color = (30, 100, 160)
+        screen.fill(base_color)
+        
+        # Add animated wave pattern
+        wave_time = time.time() * 2
+        for y in range(0, 700, 20):
+            wave_offset = int(30 * abs(((wave_time + y * 0.01) % 8) - 4))
+            # Create wave surface with alpha
+            wave_surface = pygame.Surface((1100, 10), pygame.SRCALPHA)
+            wave_alpha = 20 + int(10 * (0.5 + 0.5 * abs(((wave_time * 0.5 + y * 0.005) % 4) - 2)))
+            pygame.draw.rect(wave_surface, (50, 150, 200, wave_alpha), (0, 0, 1100, 10))
+            screen.blit(wave_surface, (wave_offset, y))
+        
+        # Add floating energy orbs
+        orb_time = time.time() * 1.5
+        for i in range(8):
+            angle = orb_time + i * 0.8
+            x = 550 + int(200 * abs(((angle * 0.3) % 4) - 2) - 200)
+            y = 350 + int(150 * abs(((angle * 0.7) % 4) - 2) - 150)
+            radius = 15 + int(10 * (0.5 + 0.5 * abs(((orb_time + i * 0.5) % 4) - 2)))
+            # Create orb surface with alpha
+            orb_surface = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            alpha = 40 + int(30 * (0.5 + 0.5 * abs(((orb_time * 1.2 + i) % 4) - 2)))
+            pygame.draw.circle(orb_surface, (100, 200, 255, alpha), (radius, radius), radius, 2)
+            screen.blit(orb_surface, (x - radius, y - radius))
         draw_instructions([
             "[C] Calm -> Tree grows +",
             "[B] Blink -> Tree grows/shrinks *", 
@@ -439,13 +559,61 @@ while running:
             if message_show_time == 0:
                 message_show_time = time.time()
             elif time.time() - message_show_time < 3:
-                txt = font.render("*** You are relaxed now! ***", True, (255, 255, 0))
+                txt = font.render("*** You are relaxed now! ***", True, (255, 255, 50))
                 screen.blit(txt, (170, 50))
         else:
             message_show_time = 0
 
     elif mode == "health":
-        screen.fill((30, 110, 150))
+        # Enhanced health mode background with wellness theme
+        base_color = (20, 80, 120)
+        screen.fill(base_color)
+        
+        # Add health-themed gradient overlay
+        health_factor = health / 100.0
+        for y in range(700):
+            gradient_factor = y / 700
+            # Health influences the background color
+            health_influence = int(health_factor * 50)
+            color = (
+                base_color[0] + int(gradient_factor * 20) + health_influence // 3,
+                base_color[1] + int(gradient_factor * 30) + health_influence // 2,
+                base_color[2] + int(gradient_factor * 40) + health_influence
+            )
+            # Ensure colors don't exceed 255
+            color = (min(255, color[0]), min(255, color[1]), min(255, color[2]))
+            pygame.draw.line(screen, color, (0, y), (1100, y))
+        
+        # Add health pulse visualization
+        pulse_time = time.time() * 3
+        pulse_intensity = 0.5 + 0.5 * (pulse_time % 2)
+        heart_beat = int(30 * pulse_intensity * health_factor)
+        
+        # Pulse rings emanating from center
+        for ring in range(4):
+            ring_radius = 50 + ring * 40 + heart_beat
+            ring_alpha = int((40 - ring * 8) * health_factor)
+            if ring_alpha > 0:
+                # Create ring surface with alpha
+                ring_surface = pygame.Surface((ring_radius * 2, ring_radius * 2), pygame.SRCALPHA)
+                pygame.draw.circle(ring_surface, (255, 100 + heart_beat, 100, ring_alpha), (ring_radius, ring_radius), ring_radius, 3)
+                screen.blit(ring_surface, (550 - ring_radius, 350 - ring_radius))
+        
+        # Add wellness sparkles based on health level
+        sparkle_time = time.time() * 2
+        num_sparkles = int(health_factor * 12)
+        for i in range(num_sparkles):
+            angle = sparkle_time + i * 0.5
+            distance = 100 + int(50 * abs(((angle * 0.3) % 4) - 2))
+            x = 550 + int(distance * abs(((angle * 0.7) % 4) - 2) - distance)
+            y = 350 + int(distance * abs(((angle * 1.1) % 4) - 2) - distance)
+            sparkle_size = 2 + int(3 * (0.5 + 0.5 * abs(((sparkle_time + i * 0.3) % 4) - 2)))
+            alpha = int(100 * health_factor * (0.5 + 0.5 * abs(((sparkle_time * 1.5 + i) % 4) - 2)))
+            if alpha > 0:
+                # Create sparkle surface with alpha
+                sparkle_surface = pygame.Surface((sparkle_size * 2, sparkle_size * 2), pygame.SRCALPHA)
+                pygame.draw.circle(sparkle_surface, (255, 255, 100, alpha), (sparkle_size, sparkle_size), sparkle_size)
+                screen.blit(sparkle_surface, (x - sparkle_size, y - sparkle_size))
         draw_instructions([
             "[C] Calm -> Health + +",
             "[B] Blink -> Health grows/shrinks *",
@@ -455,10 +623,19 @@ while running:
             "[ESC] Quit"
         ])
         draw_animated_frame(frame_index)
-        # Draw health bar background
-        pygame.draw.rect(screen, (180, 180, 180), (450, 660, 200, 20))  # Adjusted for smaller window
-        # Draw current health
-        pygame.draw.rect(screen, (0, 255, 0), (450, 660, 2 * health, 20))
+        # Draw health bar background - Enhanced colors
+        pygame.draw.rect(screen, (100, 100, 100), (450, 660, 200, 20))  # Darker gray background
+        # Draw current health - Gradient health bar
+        if health > 75:
+            health_color = (0, 255, 0)      # Bright green when high
+        elif health > 50:
+            health_color = (255, 255, 0)    # Yellow when medium
+        elif health > 25:
+            health_color = (255, 165, 0)    # Orange when low
+        else:
+            health_color = (255, 0, 0)      # Red when very low
+        
+        pygame.draw.rect(screen, health_color, (450, 660, 2 * health, 20))
         txt = font.render(f"Health: {health}/100", True, (255, 255, 255))
         screen.blit(txt, (490, 630))
 
@@ -466,7 +643,7 @@ while running:
             if message_show_time == 0:
                 message_show_time = time.time()
             elif time.time() - message_show_time < 3:
-                txt = font.render("🌟 You are relaxed now! 🌟", True, (255, 255, 0))
+                txt = font.render("*** You are relaxed now! ***", True, (255, 255, 50))
                 screen.blit(txt, (170, 50))
         else:
             message_show_time = 0
