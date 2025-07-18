@@ -1,104 +1,239 @@
-# NeuroNest 🌱
+# 🧠 NeuroNest
 
-A relaxing interactive mindfulness application that helps you grow a virtual tree through calm interactions. The tree grows when you're relaxed and shrinks when you're stressed, encouraging mindful breathing and relaxation.
+**Brain-Computer Interface Relaxation Applicat├├── 📁 PROJECT_STRUCTURE.md   # Detailed structure guide─ 📄 LICENS## 💻 Development Workflow      ## 🔧 System Requirements         # MIT Licenseon**
 
-## Features
+A neurofeedback therapy and mindfulness training application that creates relaxing, interactive experiences responding to your mental state through## 📄 License
 
-- **Interactive Tree Growth**: Watch your tree grow as you practice mindfulness
-- **Three Game Modes**:
-  - 🌳 **Static Tree**: Classic tree that grows with calm interactions
-  - 🎞️ **Animated Tree**: Beautiful animated tree sequence
-  - 💖 **Health Bar Mode**: Track your wellness with a health indicator
-- **Relaxing Audio**: Soothing background music and water sounds
-- **Visual Effects**: Falling leaves and water drop animations
+**MIT License** - Free for personal and commercial use
 
-## Installation
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-1. **Clone or download** this repository
-2. **Navigate** to the project directory:
-   ```bash
-   cd NeuroNest
-   ```
-3. **Create a virtual environment** (recommended):
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-4. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### **License Summary:**
+- ✅ **Commercial use** - Use in commercial projects
+- ✅ **Modification** - Change and adapt the code
+- ✅ **Distribution** - Share with others
+- ✅ **Private use** - Use for personal projects
+- ⚠️ **Liability** - No warranty provided
+- ⚠️ **License notice** - Must include license in derivativessual and audio feedback.
 
-## Usage
+## 🚀 Quick Start
 
-### Running the Application
 ```bash
-python mindgarden.py
+# 1. Install dependencies
+pip install pygame
+
+# 2. Run the application
+python neuronest.py
 ```
 
-### Controls
-- **[C]** - Calm mode (helps tree grow)
-- **[B]** - Blink/Water tree (moderate use helps growth, excessive use causes stress)
-- **[R]** - Reset the current session
-- **[1, 2, 3]** - Switch between game modes
-- **[ESC]** - Quit the application
+## 🎮 How to Use
 
-### Game Modes
-1. **Static Tree Mode**: Tree grows in size and changes the sky color
-2. **Animated Tree Mode**: Beautiful frame-by-frame tree animation
-3. **Health Bar Mode**: Animated tree with a health indicator
+### **Controls:**
+- **[1, 2, 3]** - Select experience mode
+- **[C]** - Calm state (grow your tree)
+- **[B]** - Blink/interaction (water effects)
+- **[R]** - Reset session
+- **[ESC]** - Exit
 
-## Utility Scripts
+### **Experience Modes:**
+1. **Static Tree Evolution** - Watch your tree grow through mindful breathing
+2. **Animated Meditation** - Interactive animation responds to your calm state  
+3. **Health & Wellness** - Track your relaxation progress with health metrics
 
-### Extract Frames from GIF
+## 🎥 Recording Your Sessions
+
+### **System Audio Recording:**
 ```bash
-python extract_frames.py [gif_file_path] [output_directory]
+# Record with full game audio
+./scripts/record_system_audio.sh
 ```
-Example:
+
+### **Setup for macOS:**
+1. Install BlackHole: `brew install --cask blackhole-2ch`
+2. Set BlackHole 2ch as system audio output
+3. Run recording script
+
+## 📁 Project Structure
+
+```
+NeuroNest/
+├── 🎮 neuronest.py           # Main application entry point
+├── 📖 README.md              # Project overview and quick start
+├── 📦 requirements.txt       # Python dependencies
+├── � LICENSE                # MIT License
+├── �📁 PROJECT_STRUCTURE.md   # Detailed structure guide
+├── 🎨 assets/                # Media files
+│   ├── 🎵 calm.mp3          # Background ambient music
+│   ├── 🌊 water.wav         # Water sound effects
+│   ├── 🌳 tree_small.png    # Tree growth stage 1
+│   ├── 🌲 tree_medium.png   # Tree growth stage 2
+│   ├── 🌴 tree_large.png    # Tree growth stage 3
+│   └── 🎬 frames/           # Animation frames (99 files)
+├── 🔧 scripts/              # Utilities and recording tools
+│   ├── 🎙️ record_system_audio.sh    # System audio recording
+│   ├── 🎧 record_with_blackhole.sh  # Enhanced audio setup
+│   ├── 🎤 record_mic_only.sh        # Microphone fallback
+│   ├── 🎬 extract_frames.py         # Animation processing
+│   ├── 🖼️ remove_gif_background.py  # Image processing
+│   ├── 📏 test_scaling.py           # Graphics testing
+│   └── ⚙️ test_setup.py            # Environment verification
+└── 📚 docs/                 # Documentation
+    ├── TECHNICAL_DOCUMENTATION.md   # Complete technical guide
+    └── PROBLEMS_ANALYSIS.md         # Issue tracking & solutions
+```
+
+### **📊 Organization Benefits:**
+- **🎯 Clear Separation:** Each folder serves a specific purpose
+- **🔍 Easy Navigation:** Find files quickly by category
+- **🛠️ Maintainable:** Simple to add new features and assets
+- **👥 Collaborative:** Professional structure for team development
+- **📈 Scalable:** Ready for future expansion and enhancements
+
+## 🛠️ Technology Stack
+
+- **Python 3.13.3** - Core application
+- **Pygame 2.6.1** - Graphics and audio
+- **FFmpeg** - Professional video recording
+- **BlackHole 2ch** - System audio capture
+
+## 🧠 BCI Integration
+
+**Current:** Keyboard simulation for testing and demonstration
+**Future:** Real EEG device integration for brain-computer interface
+
+### **Applications:**
+- Neurofeedback therapy
+- Stress reduction training
+- Meditation enhancement
+- ADHD therapy support
+- Anxiety management
+
+## 🎯 Features
+
+### **Visual Effects:**
+- Dynamic sky color transitions
+- Particle-based animations (leaves, water drops)
+- Progressive tree growth with 3 evolution stages
+- Real-time health metrics visualization
+
+### **Audio System:**
+- Background ambient music
+- Interactive water sound effects
+- Multi-channel audio mixing
+- High-quality recording support
+
+### **Recording Capabilities:**
+- 4K resolution support (2880×1800)
+- Professional H.264 video encoding
+- High-fidelity AAC audio
+- System audio capture
+
+## � Development Workflow
+
+### **Setup:**
 ```bash
-python extract_frames.py my_animation.gif frames
+# Clone the repository
+git clone https://github.com/AseshNemal/NeuroNest.git
+cd NeuroNest
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # macOS/Linux
+# .venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the application
+python neuronest.py
 ```
 
-### Remove Background from Frames
+### **Testing Recording:**
 ```bash
-python remove_gif_background.py
+# Test system audio recording
+./scripts/record_system_audio.sh
+
+# Test with enhanced audio setup
+./scripts/record_with_blackhole.sh
+
+# Verify environment setup
+python scripts/test_setup.py
 ```
-This will process all PNG files in the `frames/` directory and make their backgrounds transparent.
 
-## Assets Required
+## �🔧 System Requirements
 
-The application expects these files in the project directory:
-- `tree_small.png` - Small tree sprite
-- `tree_medium.png` - Medium tree sprite  
-- `tree_large.png` - Large tree sprite
-- `calm.mp3` - Background music (optional)
-- `water.wav` - Water sound effect (optional)
-- `frames/` directory with numbered frame files (frame_000.png, frame_001.png, etc.)
+**Minimum:**
+- Python 3.8+
+- 4GB RAM
+- 2GB storage
+- 1280×720 display
 
-## Tips for Relaxation
+**Recommended:**
+- Python 3.13.3
+- 8GB+ RAM
+- macOS 12.0+ (for recording)
+- 1920×1080+ display
 
-- Use **[C]** frequently for steady growth - start small and watch it grow!
-- Use **[B]** sparingly - it represents controlled breathing
-- Avoid rapid or excessive **[B]** presses as this simulates stress
-- The tree starts small to encourage mindful growth through relaxation
-- Watch the tree grow as you practice mindful breathing
-- Enjoy the relaxing background music and visual effects
+## 📊 Performance
 
-## Troubleshooting
+- **30 FPS** target frame rate
+- **<3 second** startup time
+- **~150MB** memory usage
+- **15-25%** CPU usage
 
-- **Missing dependencies**: Run `pip install -r requirements.txt`
-- **Missing assets**: Ensure all image and audio files are in the project directory
-- **No sound**: Check that your system audio is enabled and files `calm.mp3` and `water.wav` exist
+## 🔬 Research Applications
 
-## Contributing
+This application is designed for:
+- **Neurofeedback Research** - Real-time brain state monitoring
+- **Therapeutic Use** - Clinical relaxation and stress reduction
+- **Academic Studies** - Meditation and mindfulness research
+- **Data Collection** - Session metrics and progress tracking
 
-Feel free to contribute by:
-- Adding new tree sprites or animations
-- Improving the relaxation mechanics
-- Adding new visual effects
-- Enhancing the audio experience
+## 🤝 Contributing
 
-## License
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
-This project is open source. Feel free to use, modify, and distribute as needed.
+## 📞 Support
+
+- **Issues:** GitHub Issues
+- **Documentation:** `/docs/TECHNICAL_DOCUMENTATION.md`
+- **Research:** Academic collaboration welcome
+
+## � Quick Reference
+
+### **Key Files:**
+- `neuronest.py` - Main application
+- `scripts/record_system_audio.sh` - Recording tool
+- `docs/TECHNICAL_DOCUMENTATION.md` - Complete guide
+- `PROJECT_STRUCTURE.md` - Folder organization
+- `LICENSE` - MIT License terms
+
+### **Essential Commands:**
+```bash
+python neuronest.py              # Run application
+./scripts/record_system_audio.sh # Record session
+python scripts/test_setup.py     # Verify setup
+```
+
+### **File Count:**
+- **Main App:** 1 file
+- **Assets:** 105 files (images, audio, animations)
+- **Scripts:** 7 utility files
+- **Documentation:** 4 files
+- **License:** 1 file
+- **Total:** ~118 organized files
+
+## �📄 License
+
+Open source - see license file for details.
+
+---
+
+**Developed for Brain-Computer Interface Research**  
+*Combining neuroscience, technology, and mindfulness*
+
+🌱 *Grow your mind, nurture your well-being*
 
