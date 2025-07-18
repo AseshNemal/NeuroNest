@@ -31,18 +31,18 @@ for i in list(range(34, 100)) + list(range(1, 34)):
     except Exception as e:
         print(f"Missing frame {i}: {e}")
 
-# Load background music (optional)
+# Load background music (optional) - RESTORED
 try:
     pygame.mixer.music.load("calm.mp3")
-    pygame.mixer.music.set_volume(0.3)
+    pygame.mixer.music.set_volume(0.3)  # Background music restored at moderate volume
     pygame.mixer.music.play(-1)
 except Exception:
     pass
 
-# Load water sound
+# Load water sound - ENHANCED FOR RECORDING
 try:
     water_sound = pygame.mixer.Sound("water.wav")
-    water_sound.set_volume(0.6)
+    water_sound.set_volume(0.8)  # Louder water sounds for clear recording
 except:
     water_sound = None
 
@@ -277,6 +277,10 @@ class WaterDrop:
 leaves = [Leaf() for _ in range(20)]
 water_drops = []
 
+# Key press tracking for visual indicators
+key_press_indicators = {}
+KEY_DISPLAY_TIME = 1.5  # How long to show key press indicators
+
 def show_start_menu():
     selecting = True
     device_connected = False  # Simulate device connection status
@@ -483,13 +487,70 @@ def show_start_menu():
     return "static", False  # Default return
 
 def reset_game_state():
-    global blink_times, tree_height, health, frame_index, water_drops, message_show_time
+    global blink_times, tree_height, health, frame_index, water_drops, message_show_time, key_press_indicators
     blink_times = []
     tree_height = 10  # Start at minimum height for testing (10-42 range)
     health = 50
     frame_index = 0
     water_drops.clear()
     message_show_time = 0
+    key_press_indicators.clear()
+
+def draw_key_indicators():
+    """Draw visual indicators for key presses"""
+    current_time = time.time()
+    
+    # Clean up old key presses
+    keys_to_remove = []
+    for key, press_time in key_press_indicators.items():
+        if current_time - press_time > KEY_DISPLAY_TIME:
+            keys_to_remove.append(key)
+    
+    for key in keys_to_remove:
+        del key_press_indicators[key]
+    
+    # Draw active key indicators
+    indicator_font = pygame.font.SysFont(None, 48)
+    y_offset = 200
+    
+    for key, press_time in key_press_indicators.items():
+        # Calculate fade effect
+        time_since_press = current_time - press_time
+        fade_factor = 1.0 - (time_since_press / KEY_DISPLAY_TIME)
+        alpha = int(255 * fade_factor)
+        
+        if alpha > 0:
+            # Key display mapping
+            key_display = {
+                pygame.K_c: "[C] CALM",
+                pygame.K_b: "[B] BLINK", 
+                pygame.K_r: "[R] RESET",
+                pygame.K_1: "[1] MODE",
+                pygame.K_2: "[2] MODE",
+                pygame.K_3: "[3] MODE",
+                pygame.K_ESCAPE: "[ESC] QUIT"
+            }
+            
+            if key in key_display:
+                # Create surface with alpha for fading effect
+                text_surface = pygame.Surface((300, 60), pygame.SRCALPHA)
+                
+                # Background box with fade
+                box_alpha = int(100 * fade_factor)
+                pygame.draw.rect(text_surface, (50, 50, 50, box_alpha), (0, 0, 300, 60))
+                pygame.draw.rect(text_surface, (255, 255, 255, alpha), (0, 0, 300, 60), 3)
+                
+                # Text with fade
+                key_text = indicator_font.render(key_display[key], True, (255, 255, 0))
+                text_surface.blit(key_text, (10, 15))
+                
+                # Position on right side of screen
+                screen.blit(text_surface, (800, y_offset))
+                y_offset += 70
+
+def record_key_press(key):
+    """Record a key press for visual indication"""
+    key_press_indicators[key] = time.time()
 
 mode, device_connected = show_start_menu()
 reset_game_state()
@@ -553,6 +614,9 @@ while running:
                 screen.blit(txt, txt_rect)
         else:
             message_show_time = 0
+
+        # Draw key press indicators
+        draw_key_indicators()
 
     elif mode == "animated":
         # Enhanced animated background with dynamic elements
@@ -621,6 +685,9 @@ while running:
                 screen.blit(txt, txt_rect)
         else:
             message_show_time = 0
+
+        # Draw key press indicators
+        draw_key_indicators()
 
     elif mode == "health":
         # Enhanced health mode background with wellness theme
@@ -727,6 +794,9 @@ while running:
         else:
             message_show_time = 0
 
+        # Draw key press indicators for health mode
+        draw_key_indicators()
+
     # Leaves animation
     for leaf in leaves:
         leaf.update()
@@ -750,19 +820,24 @@ while running:
     blink_times = [t for t in blink_times if current_time - t < 3]
 
     if keys[pygame.K_ESCAPE]:
+        record_key_press(pygame.K_ESCAPE)
         running = False
 
     if keys[pygame.K_r]:
+        record_key_press(pygame.K_r)
         reset_game_state()
 
     # Mode switching in-game
     if keys[pygame.K_1]:
+        record_key_press(pygame.K_1)
         mode = "static"
         reset_game_state()
     elif keys[pygame.K_2]:
+        record_key_press(pygame.K_2)
         mode = "animated"
         reset_game_state()
     elif keys[pygame.K_3]:
+        record_key_press(pygame.K_3)
         mode = "health"
         reset_game_state()
 
@@ -770,6 +845,7 @@ while running:
 
     # Calm always grows
     if keys[pygame.K_c]:
+        record_key_press(pygame.K_c)
         if mode == "static":
             tree_height += 0.5  # Slower, more gradual growth (2 by 2 steps)
         elif mode == "animated":
@@ -783,6 +859,7 @@ while running:
 
     # Blink grows or shrinks based on blink frequency, same logic for all modes
     if keys[pygame.K_b]:
+        record_key_press(pygame.K_b)
         blink_times.append(current_time)
         if len(blink_times) > 4:
             # Too many blinks → shrink/stress
