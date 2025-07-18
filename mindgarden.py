@@ -233,22 +233,46 @@ class Leaf:
 # Water drops animation
 class WaterDrop:
     def __init__(self, x, y):
-        self.x = x + random.randint(-10, 10)
+        self.x = x + random.randint(-15, 15)  # Wider spread
         self.y = y
-        self.size = random.randint(5, 10)
-        self.speed = random.uniform(2, 4)
+        self.size = random.randint(8, 15)  # Larger drops
+        self.speed = random.uniform(1.5, 3.5)  # Slightly slower for better visibility
         self.alpha = 255
-        self.surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
+        self.surface = pygame.Surface((self.size * 2, self.size * 2), pygame.SRCALPHA)
+        self.color_variant = random.choice([
+            (0, 150, 255),    # Bright blue
+            (50, 200, 255),   # Light blue
+            (100, 220, 255),  # Sky blue
+            (0, 180, 255)     # Deep blue
+        ])
 
     def update(self):
         self.y += self.speed
-        self.alpha -= 10
+        self.alpha -= 6  # Slower fade for longer visibility
         if self.alpha < 0:
             self.alpha = 0
-        self.surface.fill((0, 0, 255, self.alpha))
+        
+        # Create drop with glow effect
+        self.surface.fill((0, 0, 0, 0))  # Clear surface
+        
+        # Draw outer glow
+        if self.alpha > 50:
+            glow_size = self.size + 3
+            pygame.draw.circle(self.surface, (*self.color_variant, max(0, self.alpha // 4)), 
+                             (self.size, self.size), glow_size)
+        
+        # Draw main drop
+        pygame.draw.circle(self.surface, (*self.color_variant, self.alpha), 
+                         (self.size, self.size), self.size)
+        
+        # Draw highlight for 3D effect
+        if self.alpha > 100:
+            highlight_size = max(2, self.size // 3)
+            pygame.draw.circle(self.surface, (255, 255, 255, min(255, self.alpha)), 
+                             (self.size - self.size//3, self.size - self.size//3), highlight_size)
 
     def draw(self):
-        screen.blit(self.surface, (self.x, self.y))
+        screen.blit(self.surface, (self.x - self.size, self.y - self.size))
 
 leaves = [Leaf() for _ in range(20)]
 water_drops = []
@@ -320,9 +344,21 @@ def show_start_menu():
         
         # Decorative elements - Enhanced with pulsing effect
         pulse = 0.5 + 0.5 * abs(((time.time() * 2) % 4) - 2)  # Pulsing from 0.5 to 1.0
-        pygame.draw.circle(screen, (int(100 * pulse), int(200 * pulse), int(100 * pulse)), (200, 200), int(40 + 10 * pulse), 3)
-        pygame.draw.circle(screen, (int(120 * pulse), int(220 * pulse), int(120 * pulse)), (900, 250), int(30 + 8 * pulse), 3)
-        pygame.draw.circle(screen, (int(80 * pulse), int(180 * pulse), int(80 * pulse)), (150, 400), int(25 + 6 * pulse), 3)
+        # Create circle surfaces with alpha for proper transparency
+        circle1_surface = pygame.Surface((int(40 + 10 * pulse) * 2 + 6, int(40 + 10 * pulse) * 2 + 6), pygame.SRCALPHA)
+        color1 = (min(255, int(100 * pulse)), min(255, int(200 * pulse)), min(255, int(100 * pulse)))
+        pygame.draw.circle(circle1_surface, color1, (int(40 + 10 * pulse) + 3, int(40 + 10 * pulse) + 3), int(40 + 10 * pulse), 3)
+        screen.blit(circle1_surface, (200 - int(40 + 10 * pulse) - 3, 200 - int(40 + 10 * pulse) - 3))
+        
+        circle2_surface = pygame.Surface((int(30 + 8 * pulse) * 2 + 6, int(30 + 8 * pulse) * 2 + 6), pygame.SRCALPHA)
+        color2 = (min(255, int(120 * pulse)), min(255, int(220 * pulse)), min(255, int(120 * pulse)))
+        pygame.draw.circle(circle2_surface, color2, (int(30 + 8 * pulse) + 3, int(30 + 8 * pulse) + 3), int(30 + 8 * pulse), 3)
+        screen.blit(circle2_surface, (900 - int(30 + 8 * pulse) - 3, 250 - int(30 + 8 * pulse) - 3))
+        
+        circle3_surface = pygame.Surface((int(25 + 6 * pulse) * 2 + 6, int(25 + 6 * pulse) * 2 + 6), pygame.SRCALPHA)
+        color3 = (min(255, int(80 * pulse)), min(255, int(180 * pulse)), min(255, int(80 * pulse)))
+        pygame.draw.circle(circle3_surface, color3, (int(25 + 6 * pulse) + 3, int(25 + 6 * pulse) + 3), int(25 + 6 * pulse), 3)
+        screen.blit(circle3_surface, (150 - int(25 + 6 * pulse) - 3, 400 - int(25 + 6 * pulse) - 3))
         
         # Add floating particles
         particle_time = time.time() * 0.3
@@ -513,7 +549,8 @@ while running:
                 message_show_time = time.time()
             elif time.time() - message_show_time < 7:
                 txt = font.render("*** Your tree is fully grown! You are relaxed now! ***", True, (255, 255, 50))
-                screen.blit(txt, (120, 50))
+                txt_rect = txt.get_rect(center=(550, 50))
+                screen.blit(txt, txt_rect)
         else:
             message_show_time = 0
 
@@ -552,6 +589,26 @@ while running:
             "[1,2,3] Change Mode",
             "[ESC] Quit"
         ])
+        
+        # Add white circular fade area around the animated image
+        if animated_frames:
+            frame = animated_frames[frame_index]
+            frame_rect = frame.get_rect(center=(550, 350))
+            
+            # Create circular white fade effect
+            circle_center = (550, 350)
+            max_radius = 200  # Maximum radius of the white circle
+            
+            # Draw multiple circles with decreasing alpha to create fade effect
+            for radius in range(max_radius, 0, -10):
+                # Calculate alpha based on distance from center (closer = more white)
+                alpha = int(255 * (max_radius - radius) / max_radius * 0.3)  # 0.3 controls fade intensity
+                if alpha > 0:
+                    # Create circle surface with alpha
+                    circle_surface = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+                    pygame.draw.circle(circle_surface, (255, 255, 255, alpha), (radius, radius), radius)
+                    screen.blit(circle_surface, (circle_center[0] - radius, circle_center[1] - radius))
+        
         draw_animated_frame(frame_index)
 
         # Relax message
@@ -560,7 +617,8 @@ while running:
                 message_show_time = time.time()
             elif time.time() - message_show_time < 3:
                 txt = font.render("*** You are relaxed now! ***", True, (255, 255, 50))
-                screen.blit(txt, (170, 50))
+                txt_rect = txt.get_rect(center=(550, 50))
+                screen.blit(txt, txt_rect)
         else:
             message_show_time = 0
 
@@ -622,6 +680,26 @@ while running:
             "[1,2,3] Change Mode",
             "[ESC] Quit"
         ])
+        
+        # Add white circular fade area around the animated image
+        if animated_frames:
+            frame = animated_frames[frame_index]
+            frame_rect = frame.get_rect(center=(550, 350))
+            
+            # Create circular white fade effect
+            circle_center = (550, 350)
+            max_radius = 200  # Maximum radius of the white circle
+            
+            # Draw multiple circles with decreasing alpha to create fade effect
+            for radius in range(max_radius, 0, -10):
+                # Calculate alpha based on distance from center (closer = more white)
+                alpha = int(255 * (max_radius - radius) / max_radius * 0.3)  # 0.3 controls fade intensity
+                if alpha > 0:
+                    # Create circle surface with alpha
+                    circle_surface = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+                    pygame.draw.circle(circle_surface, (255, 255, 255, alpha), (radius, radius), radius)
+                    screen.blit(circle_surface, (circle_center[0] - radius, circle_center[1] - radius))
+        
         draw_animated_frame(frame_index)
         # Draw health bar background - Enhanced colors
         pygame.draw.rect(screen, (100, 100, 100), (450, 660, 200, 20))  # Darker gray background
@@ -644,7 +722,8 @@ while running:
                 message_show_time = time.time()
             elif time.time() - message_show_time < 3:
                 txt = font.render("*** You are relaxed now! ***", True, (255, 255, 50))
-                screen.blit(txt, (170, 50))
+                txt_rect = txt.get_rect(center=(550, 50))
+                screen.blit(txt, txt_rect)
         else:
             message_show_time = 0
 
@@ -720,18 +799,24 @@ while running:
                 tree_height += 0.7  # Slightly faster than calm, but still gradual
                 if water_sound:
                     water_sound.play()
-                water_drops.append(WaterDrop(550, 700 - int(tree_height) - 20))  # Center of window
+                # Create multiple water drops for better visual effect
+                for i in range(3):
+                    water_drops.append(WaterDrop(550 + i * 20 - 20, 700 - int(tree_height) - 20))  # Center of window
             elif mode == "animated":
                 frame_index = min(len(animated_frames) - 1, frame_index + 2)
                 if water_sound:
                     water_sound.play()
-                water_drops.append(WaterDrop(550, 700 - frame_index - 20))  # Center of window
+                # Create multiple water drops for better visual effect
+                for i in range(3):
+                    water_drops.append(WaterDrop(550 + i * 20 - 20, 700 - frame_index - 20))  # Center of window
             elif mode == "health":
                 health = min(100, health + 1)
                 frame_index = min(len(animated_frames) - 1, frame_index + 1)
                 if water_sound:
                     water_sound.play()
-                water_drops.append(WaterDrop(550, 700 - frame_index - 20))  # Center of window
+                # Create multiple water drops for better visual effect
+                for i in range(3):
+                    water_drops.append(WaterDrop(550 + i * 20 - 20, 700 - frame_index - 20))  # Center of window
 
     # Clamp values to valid ranges
     if mode == "static":
