@@ -8,7 +8,7 @@ pygame.init()
 pygame.mixer.init()
 
 screen = pygame.display.set_mode((1100, 700))  # Updated window size
-pygame.display.set_caption("🌱 MindGarden: Relax to Grow")
+pygame.display.set_caption("MindGarden: Relax to Grow")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 28)
 
@@ -60,11 +60,11 @@ def get_sky_color(height):
 
 def get_tree_stage(height):
     if height <= 20:
-        return "🌱 Small Tree"
+        return "Small Tree"
     elif height <= 30:
-        return "🌳 Medium Tree"
+        return "Medium Tree"
     else:
-        return "🌲 Large Tree"
+        return "Large Tree"
 
 def get_current_scale(height):
     """Return the current scale factor for the tree at given height"""
@@ -93,52 +93,6 @@ def draw_instructions(lines):
     for i, text in enumerate(lines):
         render = font.render(text, True, (255, 255, 255))
         screen.blit(render, (10, 10 + i * 24))
-
-def draw_tree_testing(tree_type, scale):
-    """Draw individual tree for testing with precise scale control"""
-    if tree_type == 1 and tree_small:
-        img = tree_small
-        # Tree 1 target range: 170×158 to 382×355 pixels
-        # Original: 1417 × 1317, so scale range: 0.12 to 0.27
-        actual_scale = 0.12 + (scale - 0.5) * 0.3  # Map 0.5-5.5 input to 0.12-0.27
-        actual_scale = max(0.05, min(0.5, actual_scale))  # Safety bounds
-    elif tree_type == 2 and tree_medium:
-        img = tree_medium
-        # Tree 2 target range: 339×361 to 424×551 pixels
-        # Original: 283 × 301, so scale range: 1.20 to 1.50
-        actual_scale = 1.0 + (scale - 0.5) * 0.2  # Map 0.5-5.5 input to 1.0-2.0
-        actual_scale = max(0.5, min(3.0, actual_scale))  # Safety bounds
-    elif tree_type == 3 and tree_large:
-        img = tree_large
-        # Tree 3 target range: 432×411 to 631×600 pixels
-        # Original: 283 × 269, so scale range: 1.53 to 2.23
-        actual_scale = 1.2 + (scale - 0.5) * 0.4  # Map 0.5-5.5 input to 1.2-3.2
-        actual_scale = max(0.5, min(4.0, actual_scale))  # Safety bounds
-    else:
-        return
-    
-    # Calculate dimensions
-    width = int(img.get_width() * actual_scale)
-    height_scaled = int(img.get_height() * actual_scale)
-    
-    # Safety check for screen bounds
-    max_width = 800
-    max_height = 600
-    if width > max_width:
-        actual_scale = max_width / img.get_width()
-        width = max_width
-        height_scaled = int(img.get_height() * actual_scale)
-    if height_scaled > max_height:
-        actual_scale = max_height / img.get_height()
-        width = int(img.get_width() * actual_scale)
-        height_scaled = max_height
-        
-    img_scaled = pygame.transform.smoothscale(img, (width, height_scaled))
-    x = (1100 - width) // 2  # Center in window
-    y = 400 - height_scaled  # Position above center
-    screen.blit(img_scaled, (x, y))
-    
-    return width, height_scaled, actual_scale
 
 def draw_tree_static(height):
     if not tree_small or not tree_medium or not tree_large:
@@ -281,20 +235,131 @@ water_drops = []
 
 def show_start_menu():
     selecting = True
+    device_connected = False  # Simulate device connection status
+    
     while selecting:
-        screen.fill((30, 100, 160))
-        lines = [
-            "Welcome to 🌿 MindGarden",
-            "Choose tree mode:",
-            "[1] Static Tree 🌳",
-            "[2] Animated Tree 🎞️",
-            "[3] Animated Tree + Health Bar 💖",
-            "[4] 🔧 Tree Testing Mode",
-            "[ESC] Quit"
+        # Gradient background
+        screen.fill((15, 25, 50))
+        
+        # Draw gradient effect
+        for y in range(700):
+            color_factor = y / 700
+            color = (
+                int(15 + color_factor * 25),
+                int(25 + color_factor * 75), 
+                int(50 + color_factor * 110)
+            )
+            pygame.draw.line(screen, color, (0, y), (1100, y))
+        
+        # Title section with larger, styled text
+        title_font = pygame.font.SysFont(None, 64)
+        subtitle_font = pygame.font.SysFont(None, 32)
+        
+        # Main title with shadow effect
+        shadow_text = title_font.render("* MindGarden *", True, (20, 20, 20))
+        main_text = title_font.render("* MindGarden *", True, (120, 255, 120))
+        screen.blit(shadow_text, (552, 82))
+        screen.blit(main_text, (550, 80))
+        
+        # Subtitle
+        subtitle = subtitle_font.render("Brain-Controlled Relaxation Experience", True, (180, 220, 180))
+        subtitle_rect = subtitle.get_rect(center=(550, 130))
+        screen.blit(subtitle, subtitle_rect)
+        
+        # Decorative elements
+        pygame.draw.circle(screen, (80, 150, 80, 100), (200, 200), 40, 2)
+        pygame.draw.circle(screen, (80, 150, 80, 100), (900, 250), 30, 2)
+        pygame.draw.circle(screen, (80, 150, 80, 100), (150, 400), 25, 2)
+        
+        # Device status panel
+        status_y = 180
+        panel_rect = pygame.Rect(350, status_y - 10, 400, 80)
+        pygame.draw.rect(screen, (40, 60, 90, 180), panel_rect)
+        pygame.draw.rect(screen, (100, 150, 200), panel_rect, 2)
+        
+        # Device status with icon
+        if device_connected:
+            status_icon = "[ON]"
+            status_text = "EEG Device: Connected"
+            status_color = (100, 255, 100)
+            detail_text = "Ready for brain-computer interface"
+        else:
+            status_icon = "[OFF]"
+            status_text = "EEG Device: Not Connected"
+            status_color = (255, 120, 120)
+            detail_text = "Using keyboard simulation mode"
+        
+        status_full = f"{status_icon} {status_text}"
+        status_render = subtitle_font.render(status_full, True, status_color)
+        status_rect = status_render.get_rect(center=(550, status_y + 15))
+        screen.blit(status_render, status_rect)
+        
+        detail_render = font.render(detail_text, True, (200, 200, 200))
+        detail_rect = detail_render.get_rect(center=(550, status_y + 40))
+        screen.blit(detail_render, detail_rect)
+        
+        # Mode selection section
+        mode_y = 320
+        mode_title = subtitle_font.render("Select Experience Mode:", True, (220, 220, 220))
+        mode_rect = mode_title.get_rect(center=(550, mode_y))
+        screen.blit(mode_title, mode_rect)
+        
+        # Mode options with boxes
+        modes = [
+            ("1", ">> Static Tree Evolution", "Watch your tree grow through mindful breathing"),
+            ("2", ">> Animated Meditation", "Interactive animation responds to your calm state"),
+            ("3", ">> Health & Wellness", "Track your relaxation progress with health metrics")
         ]
-        for i, line in enumerate(lines):
-            txt = font.render(line, True, (255, 255, 255))
-            screen.blit(txt, (50, 60 + i * 40))
+        
+        for i, (key, title, desc) in enumerate(modes):
+            y_pos = mode_y + 60 + i * 80
+            
+            # Mode box
+            box_rect = pygame.Rect(200, y_pos - 25, 700, 60)
+            pygame.draw.rect(screen, (30, 50, 80, 150), box_rect)
+            pygame.draw.rect(screen, (120, 180, 220), box_rect, 2)
+            
+            # Key indicator
+            key_circle = pygame.Rect(220, y_pos - 15, 40, 40)
+            pygame.draw.circle(screen, (80, 120, 180), key_circle.center, 20)
+            key_text = subtitle_font.render(key, True, (255, 255, 255))
+            key_rect = key_text.get_rect(center=key_circle.center)
+            screen.blit(key_text, key_rect)
+            
+            # Mode title and description
+            title_render = font.render(title, True, (255, 255, 255))
+            screen.blit(title_render, (280, y_pos - 10))
+            
+            desc_render = pygame.font.SysFont(None, 20).render(desc, True, (180, 180, 180))
+            screen.blit(desc_render, (280, y_pos + 10))
+        
+        # Control panel
+        control_y = 580
+        control_panel = pygame.Rect(250, control_y - 20, 600, 100)
+        pygame.draw.rect(screen, (20, 30, 50, 200), control_panel)
+        pygame.draw.rect(screen, (80, 120, 160), control_panel, 2)
+        
+        controls = [
+            f"[D] {'Disconnect' if device_connected else 'Connect'} EEG Device (Demo)",
+            "[ESC] Exit Application"
+        ]
+        
+        for i, control in enumerate(controls):
+            if "[D]" in control:
+                color = (255, 255, 100)  # Yellow for device control
+            else:
+                color = (200, 200, 200)
+            
+            control_render = font.render(control, True, color)
+            control_rect = control_render.get_rect(center=(550, control_y + i * 25))
+            screen.blit(control_render, control_rect)
+        
+        # Footer
+        footer_text = "Developed for Brain-Computer Interface Research | Part 1: Software Prototype"
+        footer_render = pygame.font.SysFont(None, 18).render(footer_text, True, (120, 120, 120))
+        footer_rect = footer_render.get_rect(center=(550, 680))
+        screen.blit(footer_render, footer_rect)
+        
         pygame.display.flip()
 
         for event in pygame.event.get():
@@ -303,35 +368,30 @@ def show_start_menu():
                 exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    return "static"
+                    return "static", device_connected
                 elif event.key == pygame.K_2:
-                    return "animated"
+                    return "animated", device_connected
                 elif event.key == pygame.K_3:
-                    return "health"
-                elif event.key == pygame.K_4:
-                    return "testing"
+                    return "health", device_connected
+                elif event.key == pygame.K_d:
+                    device_connected = not device_connected  # Toggle demo connection
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     exit()
+    
+    return "static", False  # Default return
 
 def reset_game_state():
     global blink_times, tree_height, health, frame_index, water_drops, message_show_time
-    global test_tree_type, test_scale  # Add testing variables
     blink_times = []
     tree_height = 10  # Start at minimum height for testing (10-42 range)
     health = 50
     frame_index = 0
     water_drops.clear()
     message_show_time = 0
-    test_tree_type = 1  # Start with tree 1
-    test_scale = 0.5    # Start with small scale
 
-mode = show_start_menu()
+mode, device_connected = show_start_menu()
 reset_game_state()
-
-# Initialize testing variables
-test_tree_type = 1
-test_scale = 0.5
 
 running = True
 message_show_time = 0
@@ -340,69 +400,34 @@ while running:
     if mode == "static":
         screen.fill(get_sky_color(tree_height))
         draw_instructions([
-            "[C] Calm → Grow tree slowly 🌱",
-            "[B] Blink → Water tree 💧",
-            "Too many [B] → Stress → Shrink 🌿",
-            "Tree evolves: Small→Medium→Large",
+            "[C] Calm -> Grow tree slowly +",
+            "[B] Blink -> Water tree ~",
+            "Too many [B] -> Stress -> Shrink !",
+            "Tree evolves: Small->Medium->Large",
             f"Current stage: {get_tree_stage(tree_height)}",
-            f"🔢 Height: {tree_height:.1f} / 42",
-            f"📏 Scale: {get_current_scale(tree_height):.1f}x",
+            f"Device: {'Connected' if device_connected else 'Keyboard Mode'}",
             "[R] Reset",
             "[1,2,3] Change Mode",
             "[ESC] Quit"
         ])
         draw_tree_static(tree_height)
-        
-        # Show tree size testing info
-        current_scale = get_current_scale(tree_height)
-        if tree_small:  # Estimate tree image size
-            estimated_width = int(tree_small.get_width() * current_scale)
-            estimated_height = int(tree_small.get_height() * current_scale)
-        else:
-            estimated_width = int(200 * current_scale)  # Default estimate
-            estimated_height = int(250 * current_scale)
-            
-        # Draw size info box
-        info_lines = [
-            f"🔍 TREE SIZE TESTING",
-            f"Height: {tree_height:.1f} / 42",
-            f"Scale: {current_scale:.1f}x",
-            f"Size: {estimated_width}×{estimated_height}px",
-            f"Stage: {get_tree_stage(tree_height)}"
-        ]
-        
-        # Draw background for info box
-        pygame.draw.rect(screen, (0, 0, 0, 128), (800, 10, 290, 140))
-        for i, line in enumerate(info_lines):
-            txt = font.render(line, True, (255, 255, 0))
-            screen.blit(txt, (810, 20 + i * 25))
-            
-        # Draw growth progress bar
-        pygame.draw.rect(screen, (50, 50, 50), (800, 160, 290, 30))
-        progress_width = int(290 * (tree_height - 10) / 32)  # 32 = total range (42-10)
-        color = (0, 255, 0) if tree_height < 20 else (255, 165, 0) if tree_height < 30 else (255, 0, 0)
-        pygame.draw.rect(screen, color, (800, 160, progress_width, 30))
-        
-        # Progress labels
-        progress_text = f"Progress: {((tree_height - 10) / 32 * 100):.0f}%"
-        txt = font.render(progress_text, True, (255, 255, 255))
-        screen.blit(txt, (810, 200))
 
         # Show relax message if fully evolved (largest tree at max size)
         if tree_height >= 42:
             if message_show_time == 0:
                 message_show_time = time.time()
-            elif time.time() - message_show_time < 3:
-                txt = font.render("🌟 Your tree has fully evolved! 🌟", True, (255, 255, 0))
-                screen.blit(txt, (160, 50))
+            elif time.time() - message_show_time < 7:
+                txt = font.render("*** Your tree is fully grown! You are relaxed now! ***", True, (255, 255, 0))
+                screen.blit(txt, (120, 50))
         else:
             message_show_time = 0
 
     elif mode == "animated":
         screen.fill((40, 120, 180))
         draw_instructions([
-            "[C] Calm → Tree grows",
-            "[B] Blink → Tree grows/shrinks",
+            "[C] Calm -> Tree grows +",
+            "[B] Blink -> Tree grows/shrinks *", 
+            f"Device: {'Connected' if device_connected else 'Keyboard Mode'}",
             "[R] Reset",
             "[1,2,3] Change Mode",
             "[ESC] Quit"
@@ -414,7 +439,7 @@ while running:
             if message_show_time == 0:
                 message_show_time = time.time()
             elif time.time() - message_show_time < 3:
-                txt = font.render("🌟 You are relaxed now! 🌟", True, (255, 255, 0))
+                txt = font.render("*** You are relaxed now! ***", True, (255, 255, 0))
                 screen.blit(txt, (170, 50))
         else:
             message_show_time = 0
@@ -422,8 +447,9 @@ while running:
     elif mode == "health":
         screen.fill((30, 110, 150))
         draw_instructions([
-            "[C] Calm → Health +",
-            "[B] Blink → Health grows/shrinks",
+            "[C] Calm -> Health + +",
+            "[B] Blink -> Health grows/shrinks *",
+            f"Device: {'Connected' if device_connected else 'Keyboard Mode'}",
             "[R] Reset",
             "[1,2,3] Change Mode",
             "[ESC] Quit"
@@ -444,42 +470,6 @@ while running:
                 screen.blit(txt, (170, 50))
         else:
             message_show_time = 0
-
-    elif mode == "testing":
-        screen.fill((20, 20, 40))  # Dark background for testing
-        
-        # Draw testing instructions
-        draw_instructions([
-            "🔧 TREE TESTING MODE",
-            f"Current: Tree {test_tree_type} ({'Small' if test_tree_type==1 else 'Medium' if test_tree_type==2 else 'Large'})",
-            f"Scale: {test_scale:.1f}x",
-            "[Q/A] Change Tree Type (1/2/3)",
-            "[W/S] Scale +/- 0.1",
-            "[E/D] Scale +/- 0.5", 
-            "[R] Reset to defaults",
-            "[1,2,3,4] Change Mode",
-            "[ESC] Quit"
-        ])
-        
-        # Draw the current test tree
-        tree_info = draw_tree_testing(test_tree_type, test_scale)
-        if tree_info:
-            width, height, actual_scale = tree_info
-            
-            # Draw detailed testing info
-            info_lines = [
-                f"🔍 TREE {test_tree_type} TESTING",
-                f"Input Scale: {test_scale:.1f}x",
-                f"Actual Scale: {actual_scale:.2f}x",
-                f"Size: {width}×{height}px",
-                f"Tree Type: {'Small' if test_tree_type==1 else 'Medium' if test_tree_type==2 else 'Large'}"
-            ]
-            
-            # Draw info box
-            pygame.draw.rect(screen, (0, 0, 0, 200), (20, 250, 350, 150))
-            for i, line in enumerate(info_lines):
-                txt = font.render(line, True, (255, 255, 0))
-                screen.blit(txt, (30, 260 + i * 25))
 
     # Leaves animation
     for leaf in leaves:
@@ -519,30 +509,6 @@ while running:
     elif keys[pygame.K_3]:
         mode = "health"
         reset_game_state()
-    elif keys[pygame.K_4]:
-        mode = "testing"
-        reset_game_state()
-
-    # Testing mode controls
-    if mode == "testing":
-        if keys[pygame.K_q]:
-            test_tree_type = max(1, test_tree_type - 1)
-            time.sleep(0.1)  # Prevent rapid changes
-        elif keys[pygame.K_a]:
-            test_tree_type = min(3, test_tree_type + 1)
-            time.sleep(0.1)
-        elif keys[pygame.K_w]:
-            test_scale += 0.1
-            time.sleep(0.1)
-        elif keys[pygame.K_s]:
-            test_scale = max(0.1, test_scale - 0.1)
-            time.sleep(0.1)
-        elif keys[pygame.K_e]:
-            test_scale += 0.5
-            time.sleep(0.1)
-        elif keys[pygame.K_d]:
-            test_scale = max(0.1, test_scale - 0.5)
-            time.sleep(0.1)
 
     # Game logic for each mode
 
