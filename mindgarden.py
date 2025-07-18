@@ -7,7 +7,7 @@ import random
 pygame.init()
 pygame.mixer.init()
 
-screen = pygame.display.set_mode((600, 400))
+screen = pygame.display.set_mode((1100, 700))  # Updated window size
 pygame.display.set_caption("🌱 MindGarden: Relax to Grow")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 28)
@@ -55,92 +55,179 @@ sky_colors = [
 ]
 
 def get_sky_color(height):
-    stage = min(int((height - 50) / 70), len(sky_colors) - 1)
+    stage = min(int((height - 10) / 8), len(sky_colors) - 1)  # Adjusted for 10-42 range
     return sky_colors[stage]
+
+def get_tree_stage(height):
+    if height <= 20:
+        return "🌱 Small Tree"
+    elif height <= 30:
+        return "🌳 Medium Tree"
+    else:
+        return "🌲 Large Tree"
+
+def get_current_scale(height):
+    """Return the current scale factor for the tree at given height"""
+    # Original image dimensions:
+    # Tree Small: 1417 × 1317 pixels
+    # Tree Medium: 283 × 301 pixels  
+    # Tree Large: 283 × 269 pixels
+    
+    if height <= 20:
+        # Tree 1: 170×158 to 382×355 pixels
+        # Scale range: 0.12 to 0.27 (based on width: 170/1417 to 382/1417)
+        progress = (height - 10) / 10
+        return 0.12 + progress * 0.15
+    elif 20 < height <= 30:
+        # Tree 2: 339×361 to 424×551 pixels
+        # Scale range: 1.20 to 1.50 (based on width: 339/283 to 424/283)
+        progress = (height - 20) / 10
+        return 1.20 + progress * 0.30
+    else:
+        # Tree 3: 432×411 to 631×600 pixels
+        # Scale range: 1.53 to 2.23 (based on width: 432/283 to 631/283)
+        progress = min((height - 30) / 12, 1.0)
+        return 1.53 + progress * 0.70
 
 def draw_instructions(lines):
     for i, text in enumerate(lines):
         render = font.render(text, True, (255, 255, 255))
         screen.blit(render, (10, 10 + i * 24))
 
+def draw_tree_testing(tree_type, scale):
+    """Draw individual tree for testing with precise scale control"""
+    if tree_type == 1 and tree_small:
+        img = tree_small
+        # Tree 1 target range: 170×158 to 382×355 pixels
+        # Original: 1417 × 1317, so scale range: 0.12 to 0.27
+        actual_scale = 0.12 + (scale - 0.5) * 0.3  # Map 0.5-5.5 input to 0.12-0.27
+        actual_scale = max(0.05, min(0.5, actual_scale))  # Safety bounds
+    elif tree_type == 2 and tree_medium:
+        img = tree_medium
+        # Tree 2 target range: 339×361 to 424×551 pixels
+        # Original: 283 × 301, so scale range: 1.20 to 1.50
+        actual_scale = 1.0 + (scale - 0.5) * 0.2  # Map 0.5-5.5 input to 1.0-2.0
+        actual_scale = max(0.5, min(3.0, actual_scale))  # Safety bounds
+    elif tree_type == 3 and tree_large:
+        img = tree_large
+        # Tree 3 target range: 432×411 to 631×600 pixels
+        # Original: 283 × 269, so scale range: 1.53 to 2.23
+        actual_scale = 1.2 + (scale - 0.5) * 0.4  # Map 0.5-5.5 input to 1.2-3.2
+        actual_scale = max(0.5, min(4.0, actual_scale))  # Safety bounds
+    else:
+        return
+    
+    # Calculate dimensions
+    width = int(img.get_width() * actual_scale)
+    height_scaled = int(img.get_height() * actual_scale)
+    
+    # Safety check for screen bounds
+    max_width = 800
+    max_height = 600
+    if width > max_width:
+        actual_scale = max_width / img.get_width()
+        width = max_width
+        height_scaled = int(img.get_height() * actual_scale)
+    if height_scaled > max_height:
+        actual_scale = max_height / img.get_height()
+        width = int(img.get_width() * actual_scale)
+        height_scaled = max_height
+        
+    img_scaled = pygame.transform.smoothscale(img, (width, height_scaled))
+    x = (1100 - width) // 2  # Center in window
+    y = 400 - height_scaled  # Position above center
+    screen.blit(img_scaled, (x, y))
+    
+    return width, height_scaled, actual_scale
+
 def draw_tree_static(height):
     if not tree_small or not tree_medium or not tree_large:
         return
 
-    if height <= 150:
-        # Small tree only
+    # Single tree replacement system with test range 10-42
+    # Tree 1 (small): height 10-20 (size 1-5)
+    # Tree 2 (medium): height 20-30 (size 6-10) - replaces tree 1
+    # Tree 3 (large): height 30-42 (size 11-15) - replaces tree 2
+    
+    if height <= 20:
+        # Show only first tree (small), 170×158 to 382×355 pixels
         img = tree_small
-        scale = 0.6 + (height - 50) / 100 * 0.4  # 0.6 to 1.0
+        progress = (height - 10) / 10  # 0 to 1 over height 10-20
+        scale = 0.12 + progress * 0.15  # 0.12 to 0.27 scale
+        
+        # Calculate dimensions
         width = int(img.get_width() * scale)
         height_scaled = int(img.get_height() * scale)
+        
+        # Safety check for window bounds
+        max_width = 1100
+        max_height = 750
+        if width > max_width:
+            scale = max_width / img.get_width()
+            width = max_width
+            height_scaled = int(img.get_height() * scale)
+        if height_scaled > max_height:
+            scale = max_height / img.get_height()
+            width = int(img.get_width() * scale)
+            height_scaled = max_height
+            
         img_scaled = pygame.transform.smoothscale(img, (width, height_scaled))
-        x = (600 - width) // 2
-        y = 400 - height_scaled
+        x = (1100 - width) // 2  # Center in window
+        y = 700 - height_scaled
         screen.blit(img_scaled, (x, y))
-
-    elif 150 < height <= 210:
-        # Blend small → medium
-        t = (height - 150) / 60  # 0 to 1
-        img1 = tree_small
-        img2 = tree_medium
-
-        scale1 = 1.0 - t * 0.1       # 1.0 to 0.9
-        scale2 = 0.9 + t * 0.1       # 0.9 to 1.0
-
-        width1 = int(img1.get_width() * scale1)
-        height1 = int(img1.get_height() * scale1)
-        img1_scaled = pygame.transform.smoothscale(img1, (width1, height1))
-        img1_scaled.set_alpha(int(255 * (1 - t)))
-
-        width2 = int(img2.get_width() * scale2)
-        height2 = int(img2.get_height() * scale2)
-        img2_scaled = pygame.transform.smoothscale(img2, (width2, height2))
-        img2_scaled.set_alpha(int(255 * t))
-
-        x1 = (600 - width1) // 2
-        y1 = 400 - height1
-        x2 = (600 - width2) // 2
-        y2 = 400 - height2
-
-        screen.blit(img1_scaled, (x1, y1))
-        screen.blit(img2_scaled, (x2, y2))
-
-    elif 210 < height <= 280:
-        # Blend medium → large
-        t = (height - 210) / 70  # 0 to 1
-        img1 = tree_medium
-        img2 = tree_large
-
-        scale1 = 1.0 - t * 0.1       # 1.0 to 0.9
-        scale2 = 0.9 + t * 0.1       # 0.9 to 1.0
-
-        width1 = int(img1.get_width() * scale1)
-        height1 = int(img1.get_height() * scale1)
-        img1_scaled = pygame.transform.smoothscale(img1, (width1, height1))
-        img1_scaled.set_alpha(int(255 * (1 - t)))
-
-        width2 = int(img2.get_width() * scale2)
-        height2 = int(img2.get_height() * scale2)
-        img2_scaled = pygame.transform.smoothscale(img2, (width2, height2))
-        img2_scaled.set_alpha(int(255 * t))
-
-        x1 = (600 - width1) // 2
-        y1 = 400 - height1
-        x2 = (600 - width2) // 2
-        y2 = 400 - height2
-
-        screen.blit(img1_scaled, (x1, y1))
-        screen.blit(img2_scaled, (x2, y2))
-
-    else:
-        # Large tree only
-        img = tree_large
-        scale = 1.0
+        
+    elif 20 < height <= 30:
+        # Show only second tree (medium), 339×361 to 424×551 pixels
+        img = tree_medium
+        progress = (height - 20) / 10  # 0 to 1 over height 20-30
+        scale = 1.20 + progress * 0.30  # 1.20 to 1.50 scale
+        
+        # Calculate dimensions
         width = int(img.get_width() * scale)
         height_scaled = int(img.get_height() * scale)
+        
+        # Safety check for window bounds
+        max_width = 1100
+        max_height = 750
+        if width > max_width:
+            scale = max_width / img.get_width()
+            width = max_width
+            height_scaled = int(img.get_height() * scale)
+        if height_scaled > max_height:
+            scale = max_height / img.get_height()
+            width = int(img.get_width() * scale)
+            height_scaled = max_height
+            
         img_scaled = pygame.transform.smoothscale(img, (width, height_scaled))
-        x = (600 - width) // 2
-        y = 400 - height_scaled
+        x = (1100 - width) // 2  # Center in window
+        y = 700 - height_scaled
+        screen.blit(img_scaled, (x, y))
+        
+    else:  # height > 30
+        # Show only third tree (large), 432×411 to 631×600 pixels
+        img = tree_large
+        progress = min((height - 30) / 12, 1.0)  # 0 to 1, height 30-42
+        scale = 1.53 + progress * 0.70  # 1.53 to 2.23 scale
+        
+        # Calculate dimensions
+        width = int(img.get_width() * scale)
+        height_scaled = int(img.get_height() * scale)
+        
+        # Safety check for window bounds
+        max_width = 1050
+        max_height = 680
+        if width > max_width:
+            scale = max_width / img.get_width()
+            width = max_width
+            height_scaled = int(img.get_height() * scale)
+        if height_scaled > max_height:
+            scale = max_height / img.get_height()
+            width = int(img.get_width() * scale)
+            height_scaled = max_height
+            
+        img_scaled = pygame.transform.smoothscale(img, (width, height_scaled))
+        x = (1100 - width) // 2  # Center in window
+        y = 700 - height_scaled
         screen.blit(img_scaled, (x, y))
 
 
@@ -148,13 +235,13 @@ def draw_animated_frame(frame_index):
     if not animated_frames:
         return
     frame = animated_frames[frame_index]
-    rect = frame.get_rect(center=(300, 300))
+    rect = frame.get_rect(center=(550, 350))  # Center in window
     screen.blit(frame, rect)
 
 # Leaves animation
 class Leaf:
     def __init__(self):
-        self.x = random.randint(0, 600)
+        self.x = random.randint(0, 1100)  # Window width
         self.y = random.randint(-100, -20)
         self.size = random.randint(10, 20)
         self.speed = random.uniform(0.3, 1)
@@ -162,9 +249,9 @@ class Leaf:
     def update(self):
         self.y += self.speed
         self.x += random.uniform(-0.2, 0.2)
-        if self.y > 420:
+        if self.y > 720:  # Window height
             self.y = random.randint(-100, -20)
-            self.x = random.randint(0, 600)
+            self.x = random.randint(0, 1100)
 
     def draw(self):
         pygame.draw.ellipse(screen, (34, 139, 34), (self.x, self.y, self.size, self.size // 2))
@@ -202,6 +289,7 @@ def show_start_menu():
             "[1] Static Tree 🌳",
             "[2] Animated Tree 🎞️",
             "[3] Animated Tree + Health Bar 💖",
+            "[4] 🔧 Tree Testing Mode",
             "[ESC] Quit"
         ]
         for i, line in enumerate(lines):
@@ -220,21 +308,30 @@ def show_start_menu():
                     return "animated"
                 elif event.key == pygame.K_3:
                     return "health"
+                elif event.key == pygame.K_4:
+                    return "testing"
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     exit()
 
 def reset_game_state():
     global blink_times, tree_height, health, frame_index, water_drops, message_show_time
+    global test_tree_type, test_scale  # Add testing variables
     blink_times = []
-    tree_height = 100
+    tree_height = 10  # Start at minimum height for testing (10-42 range)
     health = 50
     frame_index = 0
     water_drops.clear()
     message_show_time = 0
+    test_tree_type = 1  # Start with tree 1
+    test_scale = 0.5    # Start with small scale
 
 mode = show_start_menu()
 reset_game_state()
+
+# Initialize testing variables
+test_tree_type = 1
+test_scale = 0.5
 
 running = True
 message_show_time = 0
@@ -243,22 +340,61 @@ while running:
     if mode == "static":
         screen.fill(get_sky_color(tree_height))
         draw_instructions([
-            "[C] Calm → Grow slowly 🌱",
+            "[C] Calm → Grow tree slowly 🌱",
             "[B] Blink → Water tree 💧",
             "Too many [B] → Stress → Shrink 🌿",
+            "Tree evolves: Small→Medium→Large",
+            f"Current stage: {get_tree_stage(tree_height)}",
+            f"🔢 Height: {tree_height:.1f} / 42",
+            f"📏 Scale: {get_current_scale(tree_height):.1f}x",
             "[R] Reset",
             "[1,2,3] Change Mode",
             "[ESC] Quit"
         ])
         draw_tree_static(tree_height)
+        
+        # Show tree size testing info
+        current_scale = get_current_scale(tree_height)
+        if tree_small:  # Estimate tree image size
+            estimated_width = int(tree_small.get_width() * current_scale)
+            estimated_height = int(tree_small.get_height() * current_scale)
+        else:
+            estimated_width = int(200 * current_scale)  # Default estimate
+            estimated_height = int(250 * current_scale)
+            
+        # Draw size info box
+        info_lines = [
+            f"🔍 TREE SIZE TESTING",
+            f"Height: {tree_height:.1f} / 42",
+            f"Scale: {current_scale:.1f}x",
+            f"Size: {estimated_width}×{estimated_height}px",
+            f"Stage: {get_tree_stage(tree_height)}"
+        ]
+        
+        # Draw background for info box
+        pygame.draw.rect(screen, (0, 0, 0, 128), (800, 10, 290, 140))
+        for i, line in enumerate(info_lines):
+            txt = font.render(line, True, (255, 255, 0))
+            screen.blit(txt, (810, 20 + i * 25))
+            
+        # Draw growth progress bar
+        pygame.draw.rect(screen, (50, 50, 50), (800, 160, 290, 30))
+        progress_width = int(290 * (tree_height - 10) / 32)  # 32 = total range (42-10)
+        color = (0, 255, 0) if tree_height < 20 else (255, 165, 0) if tree_height < 30 else (255, 0, 0)
+        pygame.draw.rect(screen, color, (800, 160, progress_width, 30))
+        
+        # Progress labels
+        progress_text = f"Progress: {((tree_height - 10) / 32 * 100):.0f}%"
+        txt = font.render(progress_text, True, (255, 255, 255))
+        screen.blit(txt, (810, 200))
 
-        # Show relax message if fully grown
-        if tree_height >= 300:
+        # Show relax message if fully evolved (largest tree at max size)
+        if tree_height >= 42:
             if message_show_time == 0:
                 message_show_time = time.time()
             elif time.time() - message_show_time < 3:
-                txt = font.render("🌟 You are relaxed now! 🌟", True, (255, 255, 0))
-                screen.blit(txt, (170, 50))
+                txt = font.render("🌟 Your tree has fully evolved! 🌟", True, (255, 255, 0))
+                screen.blit(txt, (160, 50))
         else:
             message_show_time = 0
 
@@ -294,11 +430,11 @@ while running:
         ])
         draw_animated_frame(frame_index)
         # Draw health bar background
-        pygame.draw.rect(screen, (180, 180, 180), (200, 360, 200, 20))
+        pygame.draw.rect(screen, (180, 180, 180), (450, 660, 200, 20))  # Adjusted for smaller window
         # Draw current health
-        pygame.draw.rect(screen, (0, 255, 0), (200, 360, 2 * health, 20))
+        pygame.draw.rect(screen, (0, 255, 0), (450, 660, 2 * health, 20))
         txt = font.render(f"Health: {health}/100", True, (255, 255, 255))
-        screen.blit(txt, (240, 330))
+        screen.blit(txt, (490, 630))
 
         if health >= 100:
             if message_show_time == 0:
@@ -308,6 +444,42 @@ while running:
                 screen.blit(txt, (170, 50))
         else:
             message_show_time = 0
+
+    elif mode == "testing":
+        screen.fill((20, 20, 40))  # Dark background for testing
+        
+        # Draw testing instructions
+        draw_instructions([
+            "🔧 TREE TESTING MODE",
+            f"Current: Tree {test_tree_type} ({'Small' if test_tree_type==1 else 'Medium' if test_tree_type==2 else 'Large'})",
+            f"Scale: {test_scale:.1f}x",
+            "[Q/A] Change Tree Type (1/2/3)",
+            "[W/S] Scale +/- 0.1",
+            "[E/D] Scale +/- 0.5", 
+            "[R] Reset to defaults",
+            "[1,2,3,4] Change Mode",
+            "[ESC] Quit"
+        ])
+        
+        # Draw the current test tree
+        tree_info = draw_tree_testing(test_tree_type, test_scale)
+        if tree_info:
+            width, height, actual_scale = tree_info
+            
+            # Draw detailed testing info
+            info_lines = [
+                f"🔍 TREE {test_tree_type} TESTING",
+                f"Input Scale: {test_scale:.1f}x",
+                f"Actual Scale: {actual_scale:.2f}x",
+                f"Size: {width}×{height}px",
+                f"Tree Type: {'Small' if test_tree_type==1 else 'Medium' if test_tree_type==2 else 'Large'}"
+            ]
+            
+            # Draw info box
+            pygame.draw.rect(screen, (0, 0, 0, 200), (20, 250, 350, 150))
+            for i, line in enumerate(info_lines):
+                txt = font.render(line, True, (255, 255, 0))
+                screen.blit(txt, (30, 260 + i * 25))
 
     # Leaves animation
     for leaf in leaves:
@@ -347,13 +519,37 @@ while running:
     elif keys[pygame.K_3]:
         mode = "health"
         reset_game_state()
+    elif keys[pygame.K_4]:
+        mode = "testing"
+        reset_game_state()
+
+    # Testing mode controls
+    if mode == "testing":
+        if keys[pygame.K_q]:
+            test_tree_type = max(1, test_tree_type - 1)
+            time.sleep(0.1)  # Prevent rapid changes
+        elif keys[pygame.K_a]:
+            test_tree_type = min(3, test_tree_type + 1)
+            time.sleep(0.1)
+        elif keys[pygame.K_w]:
+            test_scale += 0.1
+            time.sleep(0.1)
+        elif keys[pygame.K_s]:
+            test_scale = max(0.1, test_scale - 0.1)
+            time.sleep(0.1)
+        elif keys[pygame.K_e]:
+            test_scale += 0.5
+            time.sleep(0.1)
+        elif keys[pygame.K_d]:
+            test_scale = max(0.1, test_scale - 0.5)
+            time.sleep(0.1)
 
     # Game logic for each mode
 
     # Calm always grows
     if keys[pygame.K_c]:
         if mode == "static":
-            tree_height += 0.4
+            tree_height += 0.5  # Slower, more gradual growth (2 by 2 steps)
         elif mode == "animated":
             if frame_index < len(animated_frames) - 1:
                 frame_index += 1
@@ -369,7 +565,7 @@ while running:
         if len(blink_times) > 4:
             # Too many blinks → shrink/stress
             if mode == "static":
-                tree_height -= 2.5
+                tree_height -= 0.5  # Slower shrinking too
             elif mode == "animated":
                 frame_index = max(0, frame_index - 2)
             elif mode == "health":
@@ -378,25 +574,25 @@ while running:
         else:
             # Moderate blinks → grow/water
             if mode == "static":
-                tree_height += 3.5
+                tree_height += 0.7  # Slightly faster than calm, but still gradual
                 if water_sound:
                     water_sound.play()
-                water_drops.append(WaterDrop(300, 400 - int(tree_height) - 20))
+                water_drops.append(WaterDrop(550, 700 - int(tree_height) - 20))  # Center of window
             elif mode == "animated":
                 frame_index = min(len(animated_frames) - 1, frame_index + 2)
                 if water_sound:
                     water_sound.play()
-                water_drops.append(WaterDrop(300, 400 - frame_index - 20))
+                water_drops.append(WaterDrop(550, 700 - frame_index - 20))  # Center of window
             elif mode == "health":
                 health = min(100, health + 1)
                 frame_index = min(len(animated_frames) - 1, frame_index + 1)
                 if water_sound:
                     water_sound.play()
-                water_drops.append(WaterDrop(300, 400 - frame_index - 20))
+                water_drops.append(WaterDrop(550, 700 - frame_index - 20))  # Center of window
 
     # Clamp values to valid ranges
     if mode == "static":
-        tree_height = max(50, min(300, tree_height))
+        tree_height = max(10, min(42, tree_height))  # Test range 10-42
     elif mode == "animated":
         frame_index = max(0, min(len(animated_frames) - 1, frame_index))
     elif mode == "health":
